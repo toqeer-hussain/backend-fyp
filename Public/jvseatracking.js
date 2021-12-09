@@ -1,6 +1,3 @@
-// import { doNotTrack, hook } from "../lib/web";
-// import { removeTrailingSlash } from "../lib/url";
-
 (async (window) => {
   const {
     screen: { width, height },
