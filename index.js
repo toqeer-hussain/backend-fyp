@@ -852,25 +852,27 @@ app.get("/admintransstat", auth, async (req, res) => {
 
 app.get("/promoterlist", auth, async (req, res) => {
   const promoter = await Promoter.find({});
-  let datalist = [];
+  const datalist = [];
   for (let i = 0; i < promoter.length; i++) {
-    let salecount = await Sale.find({ prommterId: promoter[i] }).count();
-    let totalclick = await Tracker.find({ prommterId: promoter[i] }).count();
-    let conversion = (salecount * 100) / totalclick;
-    let returncount = await Sale.find({
+    const salecount = await Sale.find({ prommterId: promoter[i] }).count();
+    const totalclick = await Tracker.find({ prommterId: promoter[i] }).count();
+    const conversion = (salecount * 100) / totalclick;
+    const returncount = await Sale.find({
       prommterId: promoter[i],
       status: "30",
     }).count();
 
-    let returnper = (returncount * 100) / salecount;
-    let dataobj = {
-      salecount,
-      totalclick,
-      conversion,
-      returncount,
-      returnper,
-      name: promoter[i]?.pro_id,
-    };
+    const returnper = (returncount * 100) / salecount;
+
+    const dataobj = {};
+
+    dataobj.salecount = salecount;
+    dataobj.totalclick = totalclick;
+    dataobj.conversion = conversion;
+    dataobj.returncount = returncount;
+    dataobj.returnper = returnper;
+    dataobj.name = promoter[i]?.pro_id;
+
     datalist.push(dataobj);
   }
   return res.json(datalist);
