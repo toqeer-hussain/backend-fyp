@@ -665,32 +665,34 @@ app.get("/adminpending", auth, async (req, res) => {
 });
 
 app.get("/admintransscreen", auth, async (req, res) => {
+  const pending = await Sale.find({
+    recieved: true,
+    status: "20",
+    paid: false,
+  }).populate("webid");
+
+  let brandcom = 0;
+  pending.map((item) => {
+    brandcom =
+      brandcom +
+      Math.floor(
+        ((+item?.webid?.commission + 2) *
+          item?.products?.reduce(
+            (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
+            0
+          )) /
+          100
+      );
+  });
+
   const totaltrans = await Transaction.find({}).count();
-  const totalbrand = await Transaction.find({ Role: "advertiser" });
+  // const totalbrand = await Transaction.find({ Role: "advertiser" });
   const totalpromoter = await Transaction.find({ Role: "promoter" });
   // console.log("what is totaltrtansamount", totaltransamount);
   let promotercom = totalpromoter?.reduce((num1, num2) => num2.price + num1, 0);
-  let brandcom = totalbrand?.reduce((num1, num2) => num2.price + num1, 0);
+  // let brandcom = totalbrand?.reduce((num1, num2) => num2.price + num1, 0);
 
   // console.log("damadkfadf", brandcom);
-
-  // const totaltransamountpaid = await Sale.find({
-  //   status: "20",
-  //   recieved: true,
-  //   paid: true,
-  // }).populate("webid");
-  // let paidtopromoter = 0;
-  // let paidtopromotercom = 0;
-  // totaltransamountpaid.map((item) => {
-  //   (paidtopromotercom =
-  //     paidtopromotercom +
-  //     item.webid.commission *
-  //       item.products.map(
-  //         (v) =>
-  //           (paidtopromoter =
-  //             paidtopromoter + parseFloat(v.price.replace(/,/g, "")))
-  //       )) / 100;
-  // });
 
   res.json({ totaltrans, brandcom, promotercom });
 });
