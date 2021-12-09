@@ -124,7 +124,7 @@ app.get("/brandtransstat", auth, async (req, res) => {
       (sum =
         sum +
         Math.floor(
-          ((item?.webid?.commission + 2) *
+          ((+item?.webid?.commission + 2) *
             item?.products?.reduce(
               (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
               0
@@ -143,7 +143,7 @@ app.get("/brandtransstat", auth, async (req, res) => {
     pendingcom =
       pendingcom +
       Math.floor(
-        ((item?.webid?.commission + 2) *
+        ((+item?.webid?.commission + 2) *
           item?.products?.reduce(
             (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
             0
@@ -617,7 +617,7 @@ app.get("/adminpending", auth, async (req, res) => {
     pendingcom =
       pendingcom +
       Math.floor(
-        ((item?.webid?.commission + 2) *
+        ((+item?.webid?.commission + 2) *
           item?.products?.reduce(
             (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
             0
