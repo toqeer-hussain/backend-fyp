@@ -864,6 +864,10 @@ app.get("/promoterlist", auth, async (req, res) => {
 
     const returnper = (returncount * 100) / salecount;
 
+    console.log("returnper", returnper);
+    console.log("conversion", conversion);
+    console.log("salecount", salecount);
+    console.log("totalclick", totalclick);
     const dataobj = {};
 
     dataobj.salecount = salecount;
