@@ -36,7 +36,7 @@ app.use(function (req, res, next) {
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use("/static", express.static(path.join(__dirname, "public")));
+app.use("/static", express.static(path.join(__dirname, "/public")));
 
 // ================= Model & Connection ==================================
 require("./Model");
