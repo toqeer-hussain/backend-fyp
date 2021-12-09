@@ -854,11 +854,11 @@ app.get("/promoterlist", auth, async (req, res) => {
   const promoter = await Promoter.find({});
   const datalist = [];
   for (let i = 0; i < promoter.length; i++) {
-    const salecount = await Sale.find({ prommterId: promoter[i] }).count();
-    const totalclick = await Tracker.find({ prommterId: promoter[i] }).count();
+    const salecount = await Sale.find({ promoterId: promoter[i] }).count();
+    const totalclick = await Tracker.find({ promoterId: promoter[i] }).count();
     const conversion = (salecount * 100) / totalclick;
     const returncount = await Sale.find({
-      prommterId: promoter[i],
+      promoterId: promoter[i],
       status: "30",
     }).count();
 
