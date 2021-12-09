@@ -609,7 +609,6 @@ app.get("/adminpending", auth, async (req, res) => {
     webid: website?._id,
     recieved: false,
     status: "20",
-    paid: false,
   }).populate("webid");
 
   let pendingcom = 0;
@@ -668,7 +667,6 @@ app.get("/admintransscreen", auth, async (req, res) => {
   const pending = await Sale.find({
     recieved: true,
     status: "20",
-    paid: false,
   }).populate("webid");
 
   let brandcom = 0;
