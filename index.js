@@ -124,8 +124,8 @@ app.get("/brandtransstat", auth, async (req, res) => {
       (sum =
         sum +
         Math.floor(
-          (item.webid.commission *
-            item.products.reduce(
+          (item?.webid?.commission *
+            item?.products?.reduce(
               (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
               0
             )) /
@@ -143,8 +143,8 @@ app.get("/brandtransstat", auth, async (req, res) => {
     pendingcom =
       pendingcom +
       Math.floor(
-        (item.webid.commission *
-          item.products.reduce(
+        (item?.webid?.commission *
+          item?.products?.reduce(
             (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
             0
           )) /
@@ -176,8 +176,8 @@ app.get("/protransstat", auth, async (req, res) => {
       (sum =
         sum +
         Math.floor(
-          (item.webid.commission *
-            item.products.reduce(
+          (item?.webid?.commission *
+            item?.products?.reduce(
               (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
               0
             )) /
@@ -189,8 +189,8 @@ app.get("/protransstat", auth, async (req, res) => {
       (pendingrevenue =
         pendingrevenue +
         Math.floor(
-          (item.webid.commission *
-            item.products.reduce(
+          (item?.webid?.commission *
+            item?.products?.reduce(
               (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
               0
             )) /
@@ -279,7 +279,7 @@ app.post("/createredirecturl", auth, async (req, res) => {
     website = await website.populate("webid");
     console.log("after creation", website);
   }
-  res.send(`${website.webid.domain}/?affiliate_id=${promter.pro_id}`);
+  res.send(`${website?.webid?.domain}/?affiliate_id=${promter?.pro_id}`);
 });
 
 app.post("/tracker", async (req, res) => {
@@ -287,9 +287,9 @@ app.post("/tracker", async (req, res) => {
 
   // const locationaddress = await axios.get(`freegeoip.net/json/${req.ip}`);
   console.log(req.body);
-  const webid = await Website.findOne({ webid: req.body.payload.website });
+  const webid = await Website.findOne({ webid: req.body?.payload?.website });
   console.log("web detial", webid);
-  promotervalue = await Promoter.findOne({ pro_id: req.body.affiliate_id });
+  promotervalue = await Promoter.findOne({ pro_id: req.body?.affiliate_id });
   const promoter = await RedirectUrl.findOne({
     webid: webid?._id,
     user: promotervalue?._id,
@@ -299,23 +299,23 @@ app.post("/tracker", async (req, res) => {
   console.log("vlaue of promoter", promoter);
 
   const track = await Tracker.create({
-    city: req.body.payload.city,
-    country: req.body.payload.country,
-    browser: browser.name,
+    city: req.body?.payload?.city,
+    country: req.body?.payload?.country,
+    browser: browser?.name,
     promoterId: promotervalue?._id,
     webid: webid?._id,
-    referer: req.body.payload.referrer,
+    referer: req.body?.payload?.referrer,
   });
   console.log("value of track", track?._id);
   if (req.body.data) {
     const sale = new Sale({
-      promoterId: promoter.user._id,
-      webid: webid.id,
+      promoterId: promoter?.user?._id,
+      webid: webid?.id,
       track: track?._id,
-      orderid: req.body.orderid,
+      orderid: req.body?.orderid,
       status: "10",
     });
-    sale.products = req.body.data;
+    sale.products = req.body?.data;
     await sale.save();
   }
   res.send("Toqeer houssain");
@@ -332,7 +332,7 @@ app.post("/transaction", async (req, res) => {
   if (detail) {
     if (req.body.Role == "advertiser") {
       const website = await Website.findOne({ user: detail.user });
-      console.log("webid", website._id);
+      console.log("webid", website?._id);
       const pending = await Sale.find({
         webid: website?._id,
         recieved: false,
@@ -344,8 +344,8 @@ app.post("/transaction", async (req, res) => {
         pendingcom =
           pendingcom +
           Math.floor(
-            (item.webid.commission *
-              item.products.reduce(
+            (item?.webid?.commission *
+              item?.products?.reduce(
                 (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
                 0
               )) /
@@ -355,12 +355,12 @@ app.post("/transaction", async (req, res) => {
 
       pending.map(async (item) => {
         console.log("id value", item.id);
-        await Sale.findByIdAndUpdate(mongoose.Types.ObjectId(item.id), {
+        await Sale.findByIdAndUpdate(mongoose.Types.ObjectId(item?.id), {
           recieved: true,
         });
       });
     } else {
-      const pro = await Promoter.findOne({ user: detail.user });
+      const pro = await Promoter.findOne({ user: detail?.user });
       console.log("value of pr", pro);
       const pending = await Sale.find({
         prommterId: pro?._id,
@@ -373,8 +373,8 @@ app.post("/transaction", async (req, res) => {
         pendingcom =
           pendingcom +
           Math.floor(
-            (item.webid.commission *
-              item.products.reduce(
+            (item?.webid?.commission *
+              item?.products?.reduce(
                 (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
                 0
               )) /
@@ -383,19 +383,19 @@ app.post("/transaction", async (req, res) => {
       });
       pending.map(async (item) => {
         console.log("id value", item.id);
-        await Sale.findByIdAndUpdate(mongoose.Types.ObjectId(item.id), {
+        await Sale.findByIdAndUpdate(mongoose.Types.ObjectId(item?.id), {
           paid: true,
         });
       });
     }
 
     // console.log("find bank", detail);
-    if (detail.user.Role == req.body.Role) console.log("find bank", detail);
+    if (detail?.user?.Role == req.body?.Role) console.log("find bank", detail);
     if (detail) {
       const trans = await Transaction.create({
         price: pendingcom,
-        Role: req.body.Role,
-        account: detail._id,
+        Role: req.body?.Role,
+        account: detail?._id,
       });
       return res.json({ done: true, trans });
     }
@@ -435,24 +435,24 @@ app.get("/toppromoter", auth, async (req, res) => {
   let topbrand = [];
   let totalcommision = 0;
   console.log("registed site", registedsite);
-  for (let i = 0; i < registedsite.length; i++) {
+  for (let i = 0; i < registedsite?.length; i++) {
     const trackcount = await Tracker.find({
-      promoterId: registedsite[i].user,
+      promoterId: registedsite[i]?.user,
       webid: website?._id,
     }).count();
     const salecount = await Sale.find({
-      promoterId: registedsite[i].user,
+      promoterId: registedsite[i]?.user,
       webid: website?._id,
     }).count();
     const salecomissioin = await Sale.find({
-      promoterId: registedsite[i].user,
+      promoterId: registedsite[i]?.user,
       webid: website?._id,
     })
       .populate("promoterId")
       .populate("webid");
 
     const returnSale = await Sale.find({
-      promoterId: registedsite[i].user,
+      promoterId: registedsite[i]?.user,
       webid: website?._id,
       status: "30",
     }).count();
@@ -466,13 +466,13 @@ app.get("/toppromoter", auth, async (req, res) => {
     );
     let topbranddata = {};
     console.log("brand conversion", (salecount * 100) / trackcount);
-    topbranddata.brand = salecomissioin[0].promoterId.pro_id;
+    topbranddata.brand = salecomissioin[0]?.promoterId?.pro_id;
     topbranddata.sale = salecount;
     topbranddata.click = trackcount;
     topbranddata.return = returnSale;
     topbranddata.returnpre = (returnSale / salecount) * 100;
     topbranddata.commission = Math.floor(
-      (totalcommision * salecomissioin[0].webid.commission) / 100
+      (totalcommision * salecomissioin[0]?.webid?.commission) / 100
     );
     topbranddata.conversion = Math.floor((salecount * 100) / trackcount);
 
@@ -492,22 +492,22 @@ app.get("/topbrand", auth, async (req, res) => {
   let topbrand = [];
   let totalcommision = 0;
   console.log("registed site", registedsite);
-  for (let i = 0; i < registedsite.length; i++) {
+  for (let i = 0; i < registedsite?.length; i++) {
     const trackcount = await Tracker.find({
       promoterId: promoter?._id,
-      webid: registedsite[i].webid,
+      webid: registedsite[i]?.webid,
     }).count();
     const trackweb = await Tracker.find({
       promoterId: promoter?._id,
-      webid: registedsite[i].webid,
+      webid: registedsite[i]?.webid,
     }).populate("webid");
     const salecount = await Sale.find({
       promoterId: promoter?._id,
-      webid: registedsite[i].webid,
+      webid: registedsite[i]?.webid,
     }).count();
     const salecomissioin = await Sale.find({
       promoterId: promoter?._id,
-      webid: registedsite[i].webid,
+      webid: registedsite[i]?.webid,
     }).populate("webid");
     salecomissioin.map((item) =>
       item.products.map(
@@ -518,11 +518,11 @@ app.get("/topbrand", auth, async (req, res) => {
     );
     let topbranddata = {};
     console.log("brand conversion", trackweb);
-    topbranddata.brand = trackweb[0].webid.brand;
+    topbranddata.brand = trackweb[0]?.webid?.brand;
     topbranddata.sale = salecount;
     topbranddata.click = trackcount;
     topbranddata.commission = Math.floor(
-      (totalcommision * salecomissioin[0]?.webid.commission) / 100
+      (totalcommision * salecomissioin[0]?.webid?.commission) / 100
     );
     topbranddata.conversion = Math.floor((salecount * 100) / trackcount);
 
@@ -536,11 +536,11 @@ app.get("/procom", async (req, res) => {
   const allpromoter = await Promoter.find({});
 
   let promoterlist = [];
-  for (let i = 0; i < allpromoter.length; i++) {
+  for (let i = 0; i < allpromoter?.length; i++) {
     let sale = await Sale.find({
       status: "20",
       paid: false,
-      promoterId: allpromoter[i]._id,
+      promoterId: allpromoter[i]?._id,
     })
       .populate("promoterId")
       .populate("webid");
@@ -548,7 +548,7 @@ app.get("/procom", async (req, res) => {
       status: "20",
       paid: false,
       recieved: true,
-      promoterId: allpromoter[i]._id,
+      promoterId: allpromoter[i]?._id,
     })
       .populate("promoterId")
       .populate("webid");
@@ -560,8 +560,8 @@ app.get("/procom", async (req, res) => {
         (sum =
           sum +
           Math.floor(
-            (item.webid.commission *
-              item.products.reduce(
+            (item?.webid?.commission *
+              item?.products?.reduce(
                 (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
                 0
               )) /
@@ -574,8 +574,8 @@ app.get("/procom", async (req, res) => {
         (comsum =
           comsum +
           Math.floor(
-            (item.webid.commission *
-              item.products.reduce(
+            (item?.webid?.commission *
+              item?.products?.reduce(
                 (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
                 0
               )) /
@@ -586,12 +586,12 @@ app.get("/procom", async (req, res) => {
     console.log("googgle", sum);
     if (sum > 0) {
       let bankdetail = await BankDetail.findOne({
-        user: mongoose.Types.ObjectId(sale[0].promoterId.user),
+        user: mongoose.Types.ObjectId(sale[0]?.promoterId?.user),
       });
 
       promoterdata.pencommission = sum;
       promoterdata.reccom = comsum;
-      promoterdata.promoter = sale[0].promoterId;
+      promoterdata.promoter = sale[0]?.promoterId;
       promoterdata.bankdetail = bankdetail;
       promoterlist.push(promoterdata);
     }
@@ -615,8 +615,8 @@ app.get("/adminpending", auth, async (req, res) => {
     pendingcom =
       pendingcom +
       Math.floor(
-        (item.webid.commission *
-          item.products.reduce(
+        (item?.webid?.commission *
+          item?.products?.reduce(
             (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
             0
           )) /
@@ -646,7 +646,7 @@ app.get("/adminpending", auth, async (req, res) => {
     revenuecount =
       revenuecount +
       Math.floor(
-        item.products.reduce(
+        item?.products?.reduce(
           (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
           0
         )
@@ -666,8 +666,8 @@ app.get("/admintransscreen", auth, async (req, res) => {
   const totalbrand = await Transaction.find({ Role: "advertiser" });
   const totalpromoter = await Transaction.find({ Role: "promoter" });
   // console.log("what is totaltrtansamount", totaltransamount);
-  let promotercom = totalpromoter.reduce((num1, num2) => num2.price + num1, 0);
-  let brandcom = totalbrand.reduce((num1, num2) => num2.price + num1, 0);
+  let promotercom = totalpromoter?.reduce((num1, num2) => num2.price + num1, 0);
+  let brandcom = totalbrand?.reduce((num1, num2) => num2.price + num1, 0);
 
   // console.log("damadkfadf", brandcom);
 
@@ -714,7 +714,7 @@ app.get("/prostat", auth, async (req, res) => {
     revenuecount =
       revenuecount +
       Math.floor(
-        item.products.reduce(
+        item?.products?.reduce(
           (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
           0
         )
@@ -739,8 +739,8 @@ app.get("/prostat", auth, async (req, res) => {
     pendingcom =
       pendingcom +
       Math.floor(
-        (item.webid.commission *
-          item.products.reduce(
+        (item?.webid?.commission *
+          item?.products?.reduce(
             (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
             0
           )) /
@@ -781,7 +781,7 @@ app.get("/adminstat", auth, async (req, res) => {
     revenuecount =
       revenuecount +
       Math.floor(
-        item.products.reduce(
+        item?.products.reduce(
           (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
           0
         )
@@ -807,7 +807,7 @@ app.get("/brandtrans", auth, async (req, res) => {
   const bankdetail = await BankDetail.findOne({ user: req.user.user_id });
   const translist = await Transaction.find({ account: bankdetail });
   console.log("list", translist);
-  res.json(translist.reverse());
+  res.json(translist?.reverse());
 });
 
 app.get("/admintransstat", auth, async (req, res) => {
@@ -816,8 +816,8 @@ app.get("/admintransstat", auth, async (req, res) => {
   const translist = await Transaction.find({ account: bankdetail });
   console.log("list", translist);
   let totalcommission = 0;
-  for (let i = 0; i < translist.length; i++) {
-    totalcommission = totalcommission + +translist[0].price;
+  for (let i = 0; i < translist?.length; i++) {
+    totalcommission = totalcommission + +translist[0]?.price;
   }
 
   const pending = await Sale.find({
@@ -831,8 +831,8 @@ app.get("/admintransstat", auth, async (req, res) => {
     pendingcom =
       pendingcom +
       Math.floor(
-        (item.webid.commission *
-          item.products.reduce(
+        (item?.webid?.commission *
+          item?.products?.reduce(
             (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
             0
           )) /
@@ -843,7 +843,7 @@ app.get("/admintransstat", auth, async (req, res) => {
   res.json({
     totalcommission,
     pendingcom,
-    next: translist.reverse()[0].createdAt,
+    next: translist?.reverse()[0]?.createdAt,
   });
 });
 
@@ -866,7 +866,7 @@ app.get("/promoterlist", auth, async (req, res) => {
       conversion,
       returncount,
       returnper,
-      name: promoter[i].pro_id,
+      name: promoter[i]?.pro_id,
     };
     datalist.push(dataobj);
   }
@@ -892,7 +892,7 @@ app.get("/brandlist", auth, async (req, res) => {
       conversion,
       returncount,
       returnper,
-      name: website[i].brand,
+      name: website[i]?.brand,
     };
     datalist.push(dataobj);
   }
