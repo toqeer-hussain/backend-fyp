@@ -124,7 +124,7 @@ app.get("/brandtransstat", auth, async (req, res) => {
       (sum =
         sum +
         Math.floor(
-          (item?.webid?.commission *
+          ((item?.webid?.commission + 2) *
             item?.products?.reduce(
               (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
               0
@@ -143,7 +143,7 @@ app.get("/brandtransstat", auth, async (req, res) => {
     pendingcom =
       pendingcom +
       Math.floor(
-        (item?.webid?.commission *
+        ((item?.webid?.commission + 2) *
           item?.products?.reduce(
             (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
             0
@@ -604,18 +604,20 @@ app.get("/adminpending", auth, async (req, res) => {
   const website = await Website.findOne({ user: req.user.user_id });
   // console.log("webid", website?._id);
   ////////////////////////// Pending Commission
+
   const pending = await Sale.find({
     webid: website?._id,
     recieved: false,
     status: "20",
     paid: false,
   }).populate("webid");
+
   let pendingcom = 0;
   pending.map((item) => {
     pendingcom =
       pendingcom +
       Math.floor(
-        (item?.webid?.commission *
+        ((item?.webid?.commission + 2) *
           item?.products?.reduce(
             (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
             0
@@ -623,6 +625,7 @@ app.get("/adminpending", auth, async (req, res) => {
           100
       );
   });
+
   //////////////////////////////// Total Sale
   const totalSale = await Sale.find({
     webid: website?._id,
