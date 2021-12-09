@@ -16,7 +16,7 @@ const { v4 } = require("uuid");
 app.use(cors({ origin: "*" }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(express.static(path.join(process.env.PWD(), "public")));
+app.use(express.static(path.join(__dirname, "public")));
 
 // ================= Model & Connection ==================================
 require("./Model");
