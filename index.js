@@ -13,7 +13,7 @@ const { v4 } = require("uuid");
 // 214b1240-3710-11ec-856d-bb3e4f99a06e
 
 // ========================== Express middleWare ========================
-app.use(cors({ origin: "*" }));
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
