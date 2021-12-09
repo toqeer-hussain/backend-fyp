@@ -47,7 +47,7 @@ route.post("/", (req, res) => {
             from: "movie0world@gmail.com", //replace with your email
             to: user.email, //replace with your email
             subject: `Reset Password`,
-            html: `<h1>Click Here to :: <a href="http:localhost:3001/Reset_Password/${link}" target="_blank"> Reset Password</h1>`,
+            html: `<h1>Click Here to :: <a href="https://jvsea-frontend.herokuapp.com/Reset_Password/${link}" target="_blank"> Reset Password</h1>`,
           };
           /*
                  Here comes the important part, sendMail is the method which actually sends email, it takes mail options and
