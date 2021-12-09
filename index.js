@@ -870,11 +870,11 @@ app.get("/promoterlist", auth, async (req, res) => {
     console.log("totalclick", totalclick);
     const dataobj = {};
 
-    dataobj.salecount = salecount;
-    dataobj.totalclick = totalclick;
-    dataobj.conversion = conversion;
-    dataobj.returncount = returncount;
-    dataobj.returnper = returnper;
+    dataobj.salecount = salecount || 0;
+    dataobj.totalclick = totalclick || 0;
+    dataobj.conversion = conversion || 0;
+    dataobj.returncount = returncount || 0;
+    dataobj.returnper = returnper || 0;
     dataobj.name = promoter[i]?.pro_id;
 
     datalist.push(dataobj);
