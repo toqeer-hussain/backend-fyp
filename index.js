@@ -802,7 +802,7 @@ app.get("/adminstat", auth, async (req, res) => {
     revenuecount,
     totalsucceed,
     totalsale,
-    profit: (revenuecount * 2) / 100,
+    profit: Math.floor((revenuecount * 2) / 100),
   });
 });
 
