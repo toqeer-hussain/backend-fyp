@@ -94,15 +94,14 @@
 
   console.log(dat.city, dat.country_name);
   
-  const urlparams = new URLSearchParams(window.location.search);
-  const { affiliate_id:is_exist } = Object.fromEntries(urlparams.entries());
+ 
   const payload = {
     website,
     hostname,
     country: dat.country_name,
     city: dat.city,
     affiliate_id: affiliate_id,
-    is_exist
+    is_exist:affiliate_id ?true:false
   };
 
   if (
