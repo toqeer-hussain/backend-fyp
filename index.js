@@ -297,7 +297,7 @@ app.post("/tracker", async (req, res) => {
 
   console.log("vlaue of promoter", promotervalue);
   console.log("vlaue of promoter", promoter);
-
+if(req.body.is_exist){
   const track = await Tracker.create({
     city: req.body?.payload?.city,
     country: req.body?.payload?.country,
@@ -305,7 +305,7 @@ app.post("/tracker", async (req, res) => {
     promoterId: promotervalue?._id,
     webid: webid?._id,
     referer: req.body?.payload?.referrer,
-  });
+  });}
   console.log("value of track", track?._id);
   if (req.body.data) {
     const sale = new Sale({
