@@ -101,7 +101,7 @@
     country: dat.country_name,
     city: dat.city,
     affiliate_id: affiliate_id,
-    is_exist:affiliate_id ?true:false
+   
   };
 
   if (
@@ -148,6 +148,7 @@
           .innerText,
 
       payload,
+       is_exist:affiliate_id ?true:false
     });
   } else {
     if (window.localStorage.getItem("affiliate_id")) {
