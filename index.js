@@ -295,7 +295,7 @@ app.post("/tracker", async (req, res) => {
     user: promotervalue?._id,
   }).populate("user");
 
-  console.log("vlaue of promoter", promotervalue);
+  console.log("Count value", req.body.is_exist);
   console.log("vlaue of promoter", promoter);
 if(req.body.is_exist){
   const track = await Tracker.create({
