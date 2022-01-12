@@ -306,7 +306,7 @@ if(req.body.is_exist){
     webid: webid?._id,
     referer: req.body?.payload?.referrer,
   });}
-  console.log("value of track", track?._id);
+//   console.log("value of track", track?._id);
   if (req.body.data) {
     const sale = new Sale({
       promoterId: promoter?.user?._id,
