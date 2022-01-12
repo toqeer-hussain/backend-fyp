@@ -156,7 +156,7 @@
 
       post(`${root}/tracker`, {
         affiliate_id: affiliate,
-
+  is_exist:affiliate_id ?true:false
         payload,
       });
     }
