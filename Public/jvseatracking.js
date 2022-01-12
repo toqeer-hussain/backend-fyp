@@ -94,8 +94,8 @@
 
   console.log(dat.city, dat.country_name);
   
-  const urlSearchParams = new URLSearchParams(window.location.search);
-  const { affiliate_id:is_exist } = Object.fromEntries(urlSearchParams.entries());
+  const urlparams = new URLSearchParams(window.location.search);
+  const { affiliate_id:is_exist } = Object.fromEntries(urlparams.entries());
   const payload = {
     website,
     hostname,
