@@ -93,12 +93,16 @@
   sessionStorage.setItem("jvsea", "exist");
 
   console.log(dat.city, dat.country_name);
+  
+  const urlSearchParams = new URLSearchParams(window.location.search);
+  const { affiliate_id:is_exist } = Object.fromEntries(urlSearchParams.entries());
   const payload = {
     website,
     hostname,
     country: dat.country_name,
     city: dat.city,
     affiliate_id: affiliate_id,
+    is_exist
   };
 
   if (
