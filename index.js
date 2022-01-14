@@ -297,8 +297,9 @@ app.post("/tracker", async (req, res) => {
 
   console.log("Count value", req.body.is_exist);
   console.log("vlaue of promoter", promoter);
+  var track;
 if(req.body.is_exist){
-  const track = await Tracker.create({
+   track=await Tracker.create({
     city: req.body?.payload?.city,
     country: req.body?.payload?.country,
     browser: browser?.name,
