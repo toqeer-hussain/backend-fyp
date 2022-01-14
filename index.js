@@ -313,6 +313,8 @@ if(req.body.is_exist){
       promoterId: promoter?.user?._id,
       webid: webid?.id,
       track: track?._id,
+      city: req.body?.payload?.city,
+    country: req.body?.payload?.country,
       orderid: req.body?.orderid,
       status: "10",
     });
