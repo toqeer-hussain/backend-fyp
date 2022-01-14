@@ -10,6 +10,8 @@ var Sale = new mongoose.Schema(
   {
     products: [SaleItem],
     orderid: String,
+    city: { type: String, required: true, trim: true },
+    country: { type: String, required: true, trim: true },
     recieved: { type: Boolean, default: false },
     paid: { type: Boolean, default: false },
     promoterId: {
