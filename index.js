@@ -8,6 +8,7 @@ const { detect, detectOS } = require("detect-browser");
 const port = process.env.PORT || 3000;
 const mongoose = require("mongoose");
 const { v4 } = require("uuid");
+const excel = require("exceljs");
 
 // IP KEY
 // 214b1240-3710-11ec-856d-bb3e4f99a06e
@@ -58,47 +59,370 @@ app.use("/user", UserRoute);
 app.use("/reset_password", ResetPassword);
 app.use("/website", website);
 
+app.get("/saledata", async (req, res) => {
+  const sale = await Sale.find({}).populate("webid").populate("promoterId");
+  res.send(sale);
+});
+// row.orderid
 
-app.post("/promoterpen",async (req,res)=>{
-  const bank=await BankDetail.findOne({accountNumber:req.body.accountnumber}).populate("user");
-  console.log("bank find",bank)
-  const promoter=await Promoter.findOne({user:bank?.user})
-   console.log("promoter find",promoter)
- let comre = await Sale.find({
-      status: "20",
-      paid: false,
-      recieved: true,
-      promoterId: promoter,
+// let itemcategory = [
+//   { key: "10", value: "Processing" },
+//   { key: "20", value: "Succeed" },
+//   { key: "30", value: "Returned" },
+// ];
+
+const getdate = (value) => {
+  var today = new Date(value);
+  return (
+    today.getFullYear() + "-" + (today.getMonth() + 1) + "-" + today.getDate()
+  );
+};
+const gettime = (value) => {
+  var today = new Date(value);
+  return today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+};
+
+// Promoter id
+//
+// dAte
+// getdate(row.createdAt)
+// time
+// gettime(row.createdAt)
+
+// Formula for commission
+app.get("/downloadtopbrand", auth, async (req, res) => {
+  const promoter = await Promoter.findOne({ user: req.user.user_id }).populate(
+    "user"
+  );
+  const registedsite = await RedirectUrl.find({ user: promoter?._id }).populate(
+    "webid"
+  );
+  let topbrand = [];
+  let totalcommision = 0;
+  console.log("registed site", registedsite);
+  for (let i = 0; i < registedsite?.length; i++) {
+    const trackcount = await Tracker.find({
+      promoterId: promoter?._id,
+      webid: registedsite[i]?.webid,
+    }).count();
+    const trackweb = await Tracker.find({
+      promoterId: promoter?._id,
+      webid: registedsite[i]?.webid,
+    }).populate("webid");
+    const salecount = await Sale.find({
+      promoterId: promoter?._id,
+      webid: registedsite[i]?.webid,
+    }).count();
+    const salecomissioin = await Sale.find({
+      promoterId: promoter?._id,
+      webid: registedsite[i]?.webid,
+    }).populate("webid");
+    salecomissioin.map((item) =>
+      item.products.map(
+        (v) =>
+          (totalcommision =
+            totalcommision + parseFloat(v.price.replace(/,/g, "")))
+      )
+    );
+    let topbranddata = {};
+    console.log("brand conversion", trackweb);
+    topbranddata.Brand = trackweb[0]?.webid?.brand;
+    topbranddata.Sales = salecount;
+    topbranddata.Click = trackcount;
+    topbranddata.Commission = Math.floor(
+      (totalcommision * salecomissioin[0]?.webid?.commission) / 100
+    );
+    topbranddata.Conversion = Math.floor((salecount * 100) / trackcount);
+
+    topbrand.push(topbranddata);
+  }
+
+  // return res.json(topbrand);
+  let workbook = new excel.Workbook();
+  let worksheet = workbook.addWorksheet("Top Promoter");
+
+  worksheet.columns = [
+    { header: "Brand", key: "Brand", width: 25 },
+    { header: "Sales", key: "Sales", width: 25 },
+    { header: "Click", key: "Click", width: 25 },
+
+    { header: "Conversion", key: "Conversion", width: 25 },
+
+    { header: "Commission", key: "Commission", width: 25 },
+  ];
+
+  // Add Array Rows
+  worksheet.addRows(topbrand);
+
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=" + "Topbrand.xlsx"
+  );
+
+  return workbook.xlsx.write(res).then(function () {
+    res.status(200).end();
+  });
+});
+
+app.get("/downloadpromoterSale", auth, async (req, res) => {
+  console.log("logged in user", req.user);
+  const web = await Promoter.findOne({
+    user: mongoose.Types.ObjectId(req.user.user_id),
+  });
+  console.log("web", web);
+  const sale = await Sale.find({ promoterId: web })
+    .populate("webid")
+    .populate("promoterId");
+  console.log("sale", sale);
+  let tutorials = [];
+
+  sale.forEach((obj) => {
+    tutorials.push({
+      Product: obj.products
+        .map((item) => item.name + " *" + String(item.qty))
+        .join(","),
+      City: obj.city,
+
+      Time: gettime(obj.createdAt),
+      Date: getdate(obj.createdAt),
+      Brand: obj.webid.brand,
+      Country: obj.country,
+      Commission: Math.floor(
+        (obj.webid.commission *
+          obj.products.reduce(
+            (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
+            0
+          )) /
+          100
+      ),
+    });
+  });
+
+  let workbook = new excel.Workbook();
+  let worksheet = workbook.addWorksheet("Sales");
+
+  worksheet.columns = [
+    { header: "Product", key: "Product", width: 100 },
+    { header: "Brand", key: "Brand", width: 25 },
+    { header: "Date", key: "Date", width: 25 },
+    { header: "Time", key: "Time", width: 25 },
+    { header: "City", key: "City", width: 25 },
+    { header: "Country", key: "Country", width: 25 },
+    { header: "Commission", key: "Commission", width: 25 },
+  ];
+
+  // Add Array Rows
+  worksheet.addRows(tutorials);
+
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=" + "Promoter.xlsx"
+  );
+
+  return workbook.xlsx.write(res).then(function () {
+    res.status(200).end();
+  });
+});
+
+app.get("/downloadSales", auth, async (req, res) => {
+  console.log("req.user", req.user);
+  const web = await Website.findOne({
+    user: mongoose.Types.ObjectId(req.user.user_id),
+  });
+  // console.log("web", web);
+  const sale = await Sale.find({ webid: web })
+    .populate("webid")
+    .populate("promoterId");
+  console.log("sale", sale);
+  let tutorials = [];
+
+  sale.forEach((obj) => {
+    tutorials.push({
+      Product: obj.products
+        .map((item) => item.name + " *" + String(item.qty))
+        .join(","),
+      City: obj.city,
+      OrderNo: obj.orderid,
+      Time: gettime(obj.createdAt),
+      Date: getdate(obj.createdAt),
+      Promoter: obj.promoterId.pro_id,
+      Country: obj.country,
+      Commission: Math.floor(
+        (obj.webid.commission *
+          obj.products.reduce(
+            (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
+            0
+          )) /
+          100
+      ),
+    });
+  });
+
+  let workbook = new excel.Workbook();
+  let worksheet = workbook.addWorksheet("Sales");
+
+  worksheet.columns = [
+    { header: "OrderNo", key: "OrderNo", width: 25 },
+    { header: "Product", key: "Product", width: 100 },
+    { header: "Promoter", key: "Promoter", width: 25 },
+    { header: "Date", key: "Date", width: 25 },
+    { header: "Time", key: "Time", width: 25 },
+    { header: "City", key: "City", width: 25 },
+    { header: "Country", key: "Country", width: 25 },
+    { header: "Commission", key: "Commission", width: 25 },
+  ];
+
+  // Add Array Rows
+  worksheet.addRows(tutorials);
+
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=" + "tutorials.xlsx"
+  );
+
+  return workbook.xlsx.write(res).then(function () {
+    res.status(200).end();
+  });
+});
+
+app.get("/downloadtoppromoter", auth, async (req, res) => {
+  const website = await Website.findOne({ user: req.user.user_id }).populate(
+    "user"
+  );
+  console.log("webid", website);
+  const registedsite = await RedirectUrl.find({ webid: website?._id }).populate(
+    "webid"
+  );
+  let topbrand = [];
+  let totalcommision = 0;
+  console.log("registed site", registedsite);
+  for (let i = 0; i < registedsite?.length; i++) {
+    const trackcount = await Tracker.find({
+      promoterId: registedsite[i]?.user,
+      webid: website?._id,
+    }).count();
+    const salecount = await Sale.find({
+      promoterId: registedsite[i]?.user,
+      webid: website?._id,
+    }).count();
+    const salecomissioin = await Sale.find({
+      promoterId: registedsite[i]?.user,
+      webid: website?._id,
     })
       .populate("promoterId")
       .populate("webid");
 
-let comsum = 0;
-    comre.map(
-      (item) =>
-        (comsum =
-          comsum +
-          Math.floor(
-            (item?.webid?.commission *
-              item?.products?.reduce(
-                (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
-                0
-              )) /
-              100
-          ))
+    const returnSale = await Sale.find({
+      promoterId: registedsite[i]?.user,
+      webid: website?._id,
+      status: "30",
+    }).count();
+
+    salecomissioin.map((item) =>
+      item.products.map(
+        (v) =>
+          (totalcommision =
+            totalcommision + parseFloat(v.price.replace(/,/g, "")))
+      )
     );
-// console.log("sub value",comsum)
-return res.json({comsum});
+    let topbranddata = {};
+    console.log("brand conversion", (salecount * 100) / trackcount);
+    topbranddata.Brand = salecomissioin[0]?.promoterId?.pro_id;
+    topbranddata.Sales = salecount;
+    topbranddata.Click = trackcount;
+    topbranddata.Return = returnSale;
+    topbranddata.ReturnPercentage = (returnSale / salecount) * 100;
+    topbranddata.Commission = Math.floor(
+      (totalcommision * salecomissioin[0]?.webid?.commission) / 100
+    );
+    topbranddata.Conversion = Math.floor((salecount * 100) / trackcount);
 
+    topbrand.push(topbranddata);
+  }
 
-})
+  // return res.json(topbrand);
+  let workbook = new excel.Workbook();
+  let worksheet = workbook.addWorksheet("Top Promoter");
 
+  worksheet.columns = [
+    { header: "Brand", key: "Brand", width: 25 },
+    { header: "Sales", key: "Sales", width: 25 },
+    { header: "Click", key: "Click", width: 25 },
+    { header: "Return", key: "Return", width: 25 },
+    { header: "ReturnPercentage", key: "ReturnPercentage", width: 25 },
+    { header: "Conversion", key: "Conversion", width: 25 },
 
+    { header: "Commission", key: "Commission", width: 25 },
+  ];
 
-app.post("/checkpending",async (req,res)=>{
-  
+  // Add Array Rows
+  worksheet.addRows(topbrand);
+
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
+  res.setHeader(
+    "Content-Disposition",
+    "attachment; filename=" + "TopPromoter.xlsx"
+  );
+
+  return workbook.xlsx.write(res).then(function () {
+    res.status(200).end();
+  });
+});
+
+app.post("/promoterpen", async (req, res) => {
+  const bank = await BankDetail.findOne({
+    accountNumber: req.body.accountnumber,
+  }).populate("user");
+  console.log("bank find", bank);
+  const promoter = await Promoter.findOne({ user: bank?.user });
+  console.log("promoter find", promoter);
+  let comre = await Sale.find({
+    status: "20",
+    paid: false,
+    recieved: true,
+    promoterId: promoter,
+  })
+    .populate("promoterId")
+    .populate("webid");
+
+  let comsum = 0;
+  comre.map(
+    (item) =>
+      (comsum =
+        comsum +
+        Math.floor(
+          (item?.webid?.commission *
+            item?.products?.reduce(
+              (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
+              0
+            )) /
+            100
+        ))
+  );
+  // console.log("sub value",comsum)
+  return res.json({ comsum });
+});
+
+app.post("/checkpending", async (req, res) => {
   // const user = await User.findOne({ Role: req.params.Role });
-  const bank=await BankDetail.findOne({accountNumber:req.body.accountnumber}).populate("user");
+  const bank = await BankDetail.findOne({
+    accountNumber: req.body.accountnumber,
+  }).populate("user");
   const website = await Website.findOne({ user: bank?.user });
   // console.log("webid", website?._id);
   ////////////////////////// Pending Commission
@@ -122,10 +446,8 @@ app.post("/checkpending",async (req,res)=>{
           100
       );
   });
-return res.json({pendingcom})
-
-})
-
+  return res.json({ pendingcom });
+});
 
 app.get("/jvseabankdetail", auth, async (req, res) => {
   const user = await User.findOne({ Role: "admin" });
@@ -367,23 +689,24 @@ app.post("/tracker", async (req, res) => {
   console.log("Count value", req.body.is_exist);
   console.log("vlaue of promoter", promoter);
   var track;
-if(req.body.is_exist){
-   track=await Tracker.create({
-    city: req.body?.payload?.city,
-    country: req.body?.payload?.country,
-    browser: browser?.name,
-    promoterId: promotervalue?._id,
-    webid: webid?._id,
-    referer: req.body?.payload?.referrer,
-  });}
-//   console.log("value of track", track?._id);
+  if (req.body.is_exist) {
+    track = await Tracker.create({
+      city: req.body?.payload?.city,
+      country: req.body?.payload?.country,
+      browser: browser?.name,
+      promoterId: promotervalue?._id,
+      webid: webid?._id,
+      referer: req.body?.payload?.referrer,
+    });
+  }
+  //   console.log("value of track", track?._id);
   if (req.body.data) {
     const sale = new Sale({
       promoterId: promoter?.user?._id,
       webid: webid?.id,
       track: track?._id,
       city: req.body?.payload?.city,
-    country: req.body?.payload?.country,
+      country: req.body?.payload?.country,
       orderid: req.body?.orderid,
       status: "10",
     });
