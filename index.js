@@ -58,6 +58,75 @@ app.use("/user", UserRoute);
 app.use("/reset_password", ResetPassword);
 app.use("/website", website);
 
+
+app.post("/promoterpen",async (req,res)=>{
+  const bank=await BankDetail.findOne({accountNumber:req.body.accountnumber}).populate("user");
+  console.log("bank find",bank)
+  const promoter=await Promoter.findOne({user:bank?.user})
+   console.log("promoter find",promoter)
+ let comre = await Sale.find({
+      status: "20",
+      paid: false,
+      recieved: true,
+      promoterId: promoter,
+    })
+      .populate("promoterId")
+      .populate("webid");
+
+let comsum = 0;
+    comre.map(
+      (item) =>
+        (comsum =
+          comsum +
+          Math.floor(
+            (item?.webid?.commission *
+              item?.products?.reduce(
+                (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
+                0
+              )) /
+              100
+          ))
+    );
+// console.log("sub value",comsum)
+return res.json({comsum});
+
+
+})
+
+
+
+app.post("/checkpending",async (req,res)=>{
+  
+  // const user = await User.findOne({ Role: req.params.Role });
+  const bank=await BankDetail.findOne({accountNumber:req.body.accountnumber}).populate("user");
+  const website = await Website.findOne({ user: bank?.user });
+  // console.log("webid", website?._id);
+  ////////////////////////// Pending Commission
+
+  const pending = await Sale.find({
+    webid: website?._id,
+    recieved: false,
+    status: "20",
+  }).populate("webid");
+
+  let pendingcom = 0;
+  pending.map((item) => {
+    pendingcom =
+      pendingcom +
+      Math.floor(
+        ((+item?.webid?.commission + 2) *
+          item?.products?.reduce(
+            (num1, num2) => parseFloat(num2.price.replace(/,/g, "")) + num1,
+            0
+          )) /
+          100
+      );
+  });
+return res.json({pendingcom})
+
+})
+
+
 app.get("/jvseabankdetail", auth, async (req, res) => {
   const user = await User.findOne({ Role: "admin" });
   const bankdetail = await BankDetail.findOne({ user: user?._id });
@@ -99,7 +168,7 @@ app.post("/bankdetail", auth, async (req, res) => {
       user: req.user.user_id,
       accountNumber: req.body.accountnumber,
     });
-    return res.json(null);
+    return res.json({ updated: false });
   }
 });
 
