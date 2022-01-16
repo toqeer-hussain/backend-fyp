@@ -10,6 +10,9 @@ var UserSchema = new mongoose.Schema(
     resetPasswordToken: { type: String, default: null },
     resetPasswordExpires: { type: Date, default: null },
     phoneNumber: { type: Number, trim: true },
+    block: { type: Boolean, default: false },
+    verify: { type: Boolean, default: false },
+    verifytoken: { type: String, default: null },
     Role: {
       type: String,
       enum: ["advertiser", "promoter", "admin"],

@@ -63,6 +63,31 @@ app.get("/saledata", async (req, res) => {
   const sale = await Sale.find({}).populate("webid").populate("promoterId");
   res.send(sale);
 });
+
+app.get("/blockedlist", async (req, res) => {
+  const user = await User.find({ block: true });
+  res.send(user);
+});
+
+app.get("/unblockuser/:id", auth, async (req, res) => {
+  console.log("is called block user", req.params.id);
+  const data = await User.findByIdAndUpdate(
+    req.params.id,
+    { block: false },
+    { new: true }
+  );
+  res.send(data);
+});
+
+app.get("/blockuser/:id", auth, async (req, res) => {
+  console.log("is called block user", req.params.id);
+  const data = await User.findByIdAndUpdate(
+    req.params.id,
+    { block: true },
+    { new: true }
+  );
+  res.send(data);
+});
 // row.orderid
 
 // let itemcategory = [
@@ -224,7 +249,7 @@ app.get("/downloadpromoterSale", auth, async (req, res) => {
   );
   res.setHeader(
     "Content-Disposition",
-    "attachment; filename=" + "Promoter.xlsx"
+    "attachment; filename=" + "RecentSale.xlsx"
   );
 
   return workbook.xlsx.write(res).then(function () {
@@ -289,7 +314,7 @@ app.get("/downloadSales", auth, async (req, res) => {
   );
   res.setHeader(
     "Content-Disposition",
-    "attachment; filename=" + "tutorials.xlsx"
+    "attachment; filename=" + "RecentSales.xlsx"
   );
 
   return workbook.xlsx.write(res).then(function () {
@@ -1246,7 +1271,7 @@ app.get("/admintransstat", auth, async (req, res) => {
 });
 
 app.get("/promoterlist", auth, async (req, res) => {
-  const promoter = await Promoter.find({});
+  const promoter = await Promoter.find({}).populate("user");
   const datalist = [];
   for (let i = 0; i < promoter.length; i++) {
     const salecount = await Sale.find({ promoterId: promoter[i] }).count();
@@ -1264,7 +1289,8 @@ app.get("/promoterlist", auth, async (req, res) => {
     console.log("salecount", salecount);
     console.log("totalclick", totalclick);
     const dataobj = {};
-
+    dataobj.id = promoter[i]?.user?._id;
+    dataobj.block = promoter[i]?.user?.block;
     dataobj.salecount = salecount || 0;
     dataobj.totalclick = totalclick || 0;
     dataobj.conversion = conversion || 0;
@@ -1278,7 +1304,7 @@ app.get("/promoterlist", auth, async (req, res) => {
 });
 
 app.get("/brandlist", auth, async (req, res) => {
-  const website = await Website.find({});
+  const website = await Website.find({}).populate("user");
   let datalist = [];
   for (let i = 0; i < website.length; i++) {
     let salecount = await Sale.find({ webid: website[i] }).count();
@@ -1291,6 +1317,8 @@ app.get("/brandlist", auth, async (req, res) => {
 
     let returnper = (returncount * 100) / salecount;
     let dataobj = {
+      id: website[i]?.user?._id,
+      block: website[i]?.user?.block,
       salecount,
       totalclick,
       conversion,

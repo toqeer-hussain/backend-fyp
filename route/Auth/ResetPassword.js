@@ -32,9 +32,10 @@ route.post("/", (req, res) => {
 
           var transporter = nodemailer.createTransport({
             service: "gmail",
+
             auth: {
-              user: "movie0world@gmail.com", //replace with your email
-              pass: "toqeerali12", //replace with your password
+              user: "alishangondal6@gmail.com", //replace with your email
+              pass: "Ali_786alishangondal6", //replace with your password
             },
           });
           /*
@@ -44,10 +45,17 @@ route.post("/", (req, res) => {
                 html is our form details which we parsed using bodyParser.
                 */
           var mailOptions = {
-            from: "movie0world@gmail.com", //replace with your email
+            from: "alishangondal6@gmail.com", //replace with your email
             to: user.email, //replace with your email
-            subject: `Reset Password`,
-            html: `<h1>Click Here to :: <a href="https://jvsea-frontend.herokuapp.com/Reset_Password/${link}" target="_blank"> Reset Password</h1>`,
+            subject: `Reset Password | JVSEA`,
+            html: `
+            <p>Dear applicant,</p>
+            <span> <a href="http://jvsea-frontend.herokuapp.com/Reset_Password/${link}" target="_blank">Please click here to reset your password.</a></span>
+            <br>
+            <p>Regards,</p>
+            <p>Team@JVsea</p>
+            
+            `,
           };
           /*
                  Here comes the important part, sendMail is the method which actually sends email, it takes mail options and
